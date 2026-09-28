@@ -1,0 +1,2337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Smart Text Case Converter with intelligent acronym and proper-name preservation.">
+<title>Text Case Converter</title>
+
+<style>
+    :root {
+        --bg: #ffffff;
+        --surface: #ffffff;
+        --surface-soft: #f7f7f8;
+        --surface-hover: #f1f2f4;
+        --text: #222;
+        --muted: #777;
+        --border: #d9d9d9;
+        --border-hover: #b8b8b8;
+        --primary: #2563eb;
+        --primary-hover: #1d4ed8;
+        --danger: #dc2626;
+        --success: #15803d;
+        --shadow: 0 2px 8px rgba(0,0,0,.06);
+        --radius: 7px;
+    }
+
+    html.dark {
+        --bg: #111315;
+        --surface: #181a1d;
+        --surface-soft: #202328;
+        --surface-hover: #292d33;
+        --text: #f3f4f6;
+        --muted: #a7adb5;
+        --border: #363a40;
+        --border-hover: #50555d;
+        --shadow: 0 2px 12px rgba(0,0,0,.28);
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            Roboto,
+            Helvetica,
+            Arial,
+            sans-serif;
+        line-height: 1.5;
+        transition: background .2s ease, color .2s ease;
+    }
+
+    button,
+    textarea,
+    input,
+    select {
+        font: inherit;
+    }
+
+    button {
+        cursor: pointer;
+    }
+
+    .container {
+        width: min(1100px, calc(100% - 32px));
+        margin: 0 auto;
+    }
+
+    /* HEADER */
+    header {
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
+    }
+
+    .header-inner {
+        min-height: 62px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+    .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--text);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 16px;
+    }
+
+    .brand-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 7px;
+        background: var(--primary);
+        color: white;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        font-size: 13px;
+    }
+
+    .nav {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+    }
+
+    .nav button {
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        padding: 8px 11px;
+        border-radius: 6px;
+    }
+
+    .nav button:hover {
+        background: var(--surface-soft);
+        color: var(--text);
+    }
+
+    .mobile-menu-button {
+        display: none;
+        width: 38px;
+        height: 38px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        border-radius: 6px;
+        font-size: 20px;
+    }
+
+    /* HERO */
+    .hero {
+        text-align: center;
+        padding: 42px 0 24px;
+    }
+
+    .hero h1 {
+        margin: 0 0 8px;
+        font-size: clamp(30px, 5vw, 42px);
+        line-height: 1.15;
+        letter-spacing: -0.025em;
+    }
+
+    .hero p {
+        max-width: 760px;
+        margin: 0 auto;
+        color: var(--muted);
+        font-size: 15px;
+    }
+
+    /* EDITOR */
+    .converter {
+        padding-bottom: 45px;
+    }
+
+    .editor-wrapper {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+
+    .editor-header {
+        height: 42px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 13px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface-soft);
+    }
+
+    .editor-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    .editor-help {
+        font-size: 11px;
+        color: var(--muted);
+    }
+
+    #textEditor {
+        display: block;
+        width: 100%;
+        min-height: 315px;
+        resize: vertical;
+        border: 0;
+        outline: 0;
+        background: var(--surface);
+        color: var(--text);
+        padding: 21px;
+        font-size: 18px;
+        line-height: 1.75;
+    }
+
+    #textEditor::placeholder {
+        color: #9ca3af;
+    }
+
+    /* CASE BUTTONS */
+    .case-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 13px 0 10px;
+    }
+
+    .case-button {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        border-radius: 6px;
+        padding: 8px 10px;
+        font-size: 13px;
+        line-height: 1.2;
+        white-space: nowrap;
+        transition:
+            background .15s ease,
+            border-color .15s ease,
+            color .15s ease,
+            transform .05s ease;
+    }
+
+    .case-button:hover {
+        background: var(--surface-hover);
+        border-color: var(--border-hover);
+    }
+
+    .case-button:active {
+        transform: translateY(1px);
+    }
+
+    .case-button.active {
+        background: rgba(37,99,235,.08);
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .case-code {
+        font-weight: 800;
+        margin-right: 6px;
+    }
+
+    /* SECONDARY ACTIONS */
+    .actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 7px;
+        border-top: 1px solid var(--border);
+        padding: 12px 0;
+    }
+
+    .action-button {
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    .action-button:hover {
+        background: var(--surface-hover);
+        border-color: var(--border-hover);
+    }
+
+    .action-button.primary {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    .action-button.primary:hover {
+        background: var(--primary-hover);
+        border-color: var(--primary-hover);
+    }
+
+    .action-spacer {
+        flex: 1;
+    }
+
+    /* STATS */
+    .statistics {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 20px;
+        padding: 3px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+    }
+
+    .statistics strong {
+        color: var(--text);
+    }
+
+    .privacy-note {
+        margin-top: 8px;
+        font-size: 11px;
+        color: var(--muted);
+    }
+
+    /* TOAST */
+    .toast {
+        position: fixed;
+        z-index: 1000;
+        left: 50%;
+        bottom: 22px;
+        transform: translate(-50%, 20px);
+        opacity: 0;
+        pointer-events: none;
+        background: #222;
+        color: #fff;
+        padding: 9px 14px;
+        border-radius: 7px;
+        font-size: 12px;
+        transition: opacity .18s ease, transform .18s ease;
+    }
+
+    .toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+
+    /* MODAL */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 900;
+        background: rgba(0,0,0,.42);
+        align-items: center;
+        justify-content: center;
+        padding: 15px;
+    }
+
+    .modal-overlay.open {
+        display: flex;
+    }
+
+    .modal {
+        width: min(600px, 100%);
+        max-height: 90vh;
+        overflow-y: auto;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: 0 18px 60px rgba(0,0,0,.2);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 17px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 18px;
+    }
+
+    .close-button {
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        font-size: 25px;
+        line-height: 1;
+        padding: 0 3px;
+    }
+
+    .modal-body {
+        padding: 17px;
+    }
+
+    .setting {
+        padding: 15px 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .setting:first-child {
+        padding-top: 0;
+    }
+
+    .setting:last-child {
+        border-bottom: 0;
+    }
+
+    .setting-title {
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .setting-description {
+        color: var(--muted);
+        font-size: 12px;
+        margin-bottom: 10px;
+    }
+
+    .setting-row {
+        display: flex;
+        gap: 8px;
+    }
+
+    .setting-row input,
+    .setting-row select {
+        width: 100%;
+        min-width: 0;
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--surface);
+        color: var(--text);
+        outline: 0;
+    }
+
+    .setting-row input:focus,
+    .setting-row select:focus {
+        border-color: var(--primary);
+    }
+
+    .checkbox-label {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 13px;
+        margin: 8px 0;
+    }
+
+    .checkbox-label input {
+        accent-color: var(--primary);
+    }
+
+    .term-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 10px;
+    }
+
+    .term {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 5px 8px;
+        border-radius: 999px;
+        background: var(--surface-soft);
+        border: 1px solid var(--border);
+        font-size: 11px;
+    }
+
+    .term-remove {
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        padding: 0;
+        line-height: 1;
+    }
+
+    /* FOOTER */
+    footer {
+        border-top: 1px solid var(--border);
+        padding: 27px 0 35px;
+        color: var(--muted);
+        font-size: 12px;
+    }
+
+    .footer-inner {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    /* FOCUS */
+    button:focus-visible,
+    textarea:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+        outline: 3px solid rgba(37,99,235,.22);
+        outline-offset: 2px;
+    }
+
+    /* MOBILE */
+    @media (max-width: 760px) {
+        .container {
+            width: min(100% - 20px, 1100px);
+        }
+
+        .nav {
+            display: none;
+        }
+
+        .mobile-menu-button {
+            display: block;
+        }
+
+        .hero {
+            padding: 30px 0 20px;
+        }
+
+        .hero h1 {
+            font-size: 30px;
+        }
+
+        .hero p {
+            font-size: 14px;
+        }
+
+        #textEditor {
+            min-height: 270px;
+            padding: 15px;
+            font-size: 16px;
+        }
+
+        .case-buttons {
+            gap: 6px;
+        }
+
+        .case-button {
+            font-size: 12px;
+            padding: 8px 8px;
+        }
+
+        .actions {
+            gap: 6px;
+        }
+
+        .action-button {
+            flex: 1 1 calc(50% - 6px);
+        }
+
+        .action-spacer {
+            display: none;
+        }
+
+        .statistics {
+            gap: 7px 14px;
+        }
+    }
+
+    @media (max-width: 390px) {
+        .case-button {
+            font-size: 11px;
+            padding: 7px 6px;
+        }
+
+        .case-code {
+            margin-right: 4px;
+        }
+    }
+
+    /* MOBILE MENU */
+    .mobile-nav {
+        display: none;
+        border-top: 1px solid var(--border);
+        padding: 8px 0 11px;
+    }
+
+    .mobile-nav.open {
+        display: block;
+    }
+
+    .mobile-nav button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        border: 0;
+        background: transparent;
+        color: var(--text);
+        padding: 10px 6px;
+        border-radius: 5px;
+    }
+
+    .mobile-nav button:hover {
+        background: var(--surface-soft);
+    }
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="container header-inner">
+        <a class="brand" href="#">
+            <span class="brand-icon">Aa</span>
+            <span>Text Case Converter</span>
+        </a>
+
+        <div class="nav">
+            <button id="desktopSettings">Settings</button>
+            <button id="desktopTheme">Theme</button>
+        </div>
+
+        <button
+            class="mobile-menu-button"
+            id="mobileMenuButton"
+            aria-label="Open menu"
+            aria-expanded="false"
+            type="button"
+        >☰</button>
+    </div>
+
+    <div class="container mobile-nav" id="mobileNav">
+        <button id="mobileSettings" type="button">Settings</button>
+        <button id="mobileTheme" type="button">Toggle Theme</button>
+    </div>
+</header>
+
+<main>
+    <section class="hero container">
+        <h1>Text Case Converter</h1>
+
+        <p>
+            Convert your text to Sentence case, lower case, UPPER CASE,
+            Capitalized Case, alternating case, Title Case and InVeRsE CaSe
+            with intelligent acronym preservation.
+        </p>
+    </section>
+
+    <section class="converter container">
+
+        <!-- ONE SINGLE TEXT AREA -->
+        <div class="editor-wrapper">
+
+            <div class="editor-header">
+                <span class="editor-title">Your text</span>
+                <span class="editor-help">Type or paste your text below</span>
+            </div>
+
+            <textarea
+                id="textEditor"
+                aria-label="Text editor"
+                spellcheck="true"
+                placeholder="Type or paste your text here..."
+            ></textarea>
+        </div>
+
+        <!-- EXACT CASE BUTTONS -->
+        <div
+            class="case-buttons"
+            role="group"
+            aria-label="Text case conversion"
+        >
+
+            <button class="case-button" data-case="sentence" type="button">
+                <span class="case-code">Sc</span>Sentence case
+            </button>
+
+            <button class="case-button" data-case="lower" type="button">
+                <span class="case-code">lc</span>lower case
+            </button>
+
+            <button class="case-button" data-case="upper" type="button">
+                <span class="case-code">UC</span>UPPER CASE
+            </button>
+
+            <button class="case-button" data-case="capitalized" type="button">
+                <span class="case-code">CC</span>Capitalized Case
+            </button>
+
+            <button class="case-button" data-case="alternating" type="button">
+                <span class="case-code">aC</span>aLtErNaTiNg cAsE
+            </button>
+
+            <button class="case-button" data-case="title" type="button">
+                <span class="case-code">TC</span>Title Case
+            </button>
+
+            <button class="case-button" data-case="inverse" type="button">
+                <span class="case-code">iC</span>InVeRsE CaSe
+            </button>
+
+        </div>
+
+        <!-- SECONDARY CONTROLS -->
+        <div class="actions">
+
+            <button class="action-button primary" id="copyButton" type="button">
+                Copy
+            </button>
+
+            <button class="action-button" id="pasteButton" type="button">
+                Paste
+            </button>
+
+            <button class="action-button" id="undoButton" type="button">
+                Undo
+            </button>
+
+            <button class="action-button" id="redoButton" type="button">
+                Redo
+            </button>
+
+            <button class="action-button" id="downloadButton" type="button">
+                Download
+            </button>
+
+            <button class="action-button" id="clearButton" type="button">
+                Clear
+            </button>
+
+            <span class="action-spacer"></span>
+
+            <button class="action-button" id="settingsButton" type="button">
+                Settings
+            </button>
+
+        </div>
+
+        <!-- STATISTICS -->
+        <div class="statistics" aria-live="polite">
+            <span>
+                Characters:
+                <strong id="characters">0</strong>
+            </span>
+
+            <span>
+                No spaces:
+                <strong id="charactersNoSpaces">0</strong>
+            </span>
+
+            <span>
+                Words:
+                <strong id="words">0</strong>
+            </span>
+
+            <span>
+                Sentences:
+                <strong id="sentences">0</strong>
+            </span>
+
+            <span>
+                Lines:
+                <strong id="lines">0</strong>
+            </span>
+        </div>
+
+        <div class="privacy-note">
+            Your text is processed locally in your browser. Nothing is uploaded.
+        </div>
+
+    </section>
+</main>
+
+<footer>
+    <div class="container footer-inner">
+        <span>Text Case Converter</span>
+        <span>Local processing • Single-file application</span>
+        <span>Developed by Naser AlWatani</span>
+    </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- SETTINGS MODAL -->
+<div
+    class="modal-overlay"
+    id="settingsOverlay"
+    aria-hidden="true"
+>
+    <div
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settingsTitle"
+    >
+
+        <div class="modal-header">
+            <h2 id="settingsTitle">Settings</h2>
+
+            <button
+                class="close-button"
+                id="closeSettings"
+                type="button"
+                aria-label="Close settings"
+            >×</button>
+        </div>
+
+        <div class="modal-body">
+
+            <div class="setting">
+
+                <div class="setting-title">Appearance</div>
+
+                <div class="setting-description">
+                    Select the interface theme.
+                </div>
+
+                <div class="setting-row">
+                    <select id="themeSelect" aria-label="Theme">
+                        <option value="system">System</option>
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="setting">
+
+                <div class="setting-title">
+                    Smart capitalization
+                </div>
+
+                <div class="setting-description">
+                    Preserve acronyms, technical names and custom terms
+                    during intelligent conversions.
+                </div>
+
+                <label class="checkbox-label">
+                    <input type="checkbox" id="smartCapitalization">
+                    Enable smart protected terms
+                </label>
+
+                <label class="checkbox-label">
+                    <input type="checkbox" id="properNames">
+                    Preserve common proper and brand names
+                </label>
+
+            </div>
+
+            <div class="setting">
+
+                <div class="setting-title">
+                    Custom dictionary
+                </div>
+
+                <div class="setting-description">
+                    Add words that should always retain your preferred capitalization.
+                </div>
+
+                <div class="setting-row">
+
+                    <input
+                        id="customTermInput"
+                        type="text"
+                        placeholder="Example: CRPEP"
+                        autocomplete="off"
+                    >
+
+                    <button
+                        class="action-button primary"
+                        id="addCustomTerm"
+                        type="button"
+                    >
+                        Add
+                    </button>
+
+                </div>
+
+                <div
+                    class="term-list"
+                    id="customTermList"
+                    aria-live="polite"
+                ></div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+(() => {
+    "use strict";
+
+    /* =========================================================
+       ELEMENTS
+    ========================================================= */
+
+    const editor = document.getElementById("textEditor");
+    const toast = document.getElementById("toast");
+
+    const caseButtons =
+        Array.from(document.querySelectorAll(".case-button"));
+
+    const characters = document.getElementById("characters");
+    const charactersNoSpaces =
+        document.getElementById("charactersNoSpaces");
+    const words = document.getElementById("words");
+    const sentences = document.getElementById("sentences");
+    const lines = document.getElementById("lines");
+
+    /* =========================================================
+       DEFAULT PROTECTED TERMS
+    ========================================================= */
+
+    const DEFAULT_TERMS = {
+        "HR": "HR",
+        "IT": "IT",
+        "HRMS": "HRMS",
+        "ERP": "ERP",
+        "CRM": "CRM",
+        "API": "API",
+        "PDF": "PDF",
+        "HTML": "HTML",
+        "CSS": "CSS",
+        "SQL": "SQL",
+        "URL": "URL",
+        "URI": "URI",
+        "HTTP": "HTTP",
+        "HTTPS": "HTTPS",
+        "CEO": "CEO",
+        "CFO": "CFO",
+        "CTO": "CTO",
+        "CIO": "CIO",
+        "COO": "COO",
+        "KPI": "KPI",
+        "ISO": "ISO",
+        "NASA": "NASA",
+        "USA": "USA",
+        "UAE": "UAE",
+        "UK": "UK",
+        "B2B": "B2B",
+        "B2C": "B2C",
+        "M365": "M365",
+        "GPT": "GPT",
+        "CRPEP": "CRPEP",
+
+        "Microsoft": "Microsoft",
+        "Google": "Google",
+        "Apple": "Apple",
+        "Amazon": "Amazon",
+        "OpenAI": "OpenAI",
+        "ChatGPT": "ChatGPT",
+
+        "iPhone": "iPhone",
+        "iPad": "iPad",
+
+        "JavaScript": "JavaScript",
+        "TypeScript": "TypeScript",
+        "PowerShell": "PowerShell",
+        "Windows": "Windows",
+        "Android": "Android",
+
+        "Node.js": "Node.js",
+        "ASP.NET": "ASP.NET",
+        "C++": "C++",
+        "C#": "C#"
+    };
+
+    const COMMON_PROPER_NAMES = {
+        "Bahrain": "Bahrain",
+        "Dubai": "Dubai",
+        "Riyadh": "Riyadh",
+        "Microsoft": "Microsoft",
+        "Google": "Google",
+        "Apple": "Apple",
+        "Amazon": "Amazon",
+        "OpenAI": "OpenAI",
+        "ChatGPT": "ChatGPT",
+        "JavaScript": "JavaScript",
+        "TypeScript": "TypeScript",
+        "PowerShell": "PowerShell",
+        "Windows": "Windows",
+        "Android": "Android",
+        "Internet": "Internet",
+        "iPhone": "iPhone",
+        "iPad": "iPad"
+    };
+
+    /* =========================================================
+       APPLICATION STATE
+    ========================================================= */
+
+    let customTerms = loadJSON(
+        "smartCase.customTerms",
+        {}
+    );
+
+    let settings = {
+        smart:
+            localStorage.getItem("smartCase.smart") !== "false",
+
+        proper:
+            localStorage.getItem("smartCase.proper") !== "false",
+
+        theme:
+            localStorage.getItem("smartCase.theme") || "system"
+    };
+
+    let lastCase =
+        localStorage.getItem("smartCase.lastCase") ||
+        "capitalized";
+
+    const undoStack = [];
+    const redoStack = [];
+
+    let lastEditorValue = "";
+
+    /* =========================================================
+       STORAGE
+    ========================================================= */
+
+    function loadJSON(key, fallback) {
+        try {
+            const value = localStorage.getItem(key);
+
+            if (!value) {
+                return fallback;
+            }
+
+            const parsed = JSON.parse(value);
+
+            return parsed ?? fallback;
+        } catch {
+            return fallback;
+        }
+    }
+
+    function saveSettings() {
+        localStorage.setItem(
+            "smartCase.smart",
+            String(settings.smart)
+        );
+
+        localStorage.setItem(
+            "smartCase.proper",
+            String(settings.proper)
+        );
+
+        localStorage.setItem(
+            "smartCase.theme",
+            settings.theme
+        );
+
+        localStorage.setItem(
+            "smartCase.lastCase",
+            lastCase
+        );
+    }
+
+    /* =========================================================
+       TOAST
+    ========================================================= */
+
+    function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+
+        clearTimeout(showToast.timer);
+
+        showToast.timer = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 1700);
+    }
+
+    /* =========================================================
+       TERM DICTIONARY
+    ========================================================= */
+
+    function getProtectedTerms() {
+
+        const terms = {};
+
+        Object.assign(terms, DEFAULT_TERMS);
+
+        if (settings.proper) {
+            Object.assign(
+                terms,
+                COMMON_PROPER_NAMES
+            );
+        }
+
+        Object.assign(
+            terms,
+            customTerms
+        );
+
+        return terms;
+    }
+
+    function getProtectedLookup() {
+
+        const source = getProtectedTerms();
+        const lookup = new Map();
+
+        Object.entries(source).forEach(
+            ([key, value]) => {
+                lookup.set(
+                    key.toLocaleLowerCase(),
+                    value
+                );
+            }
+        );
+
+        return lookup;
+    }
+
+    function protectKnownTerm(token) {
+
+        if (!settings.smart) {
+            return null;
+        }
+
+        const lookup = getProtectedLookup();
+
+        const normalized =
+            token
+                .replace(
+                    /^[^\p{L}\p{N}+#.-]+|[^\p{L}\p{N}+#.-]+$/gu,
+                    ""
+                )
+                .toLocaleLowerCase();
+
+        if (!normalized) {
+            return null;
+        }
+
+        if (lookup.has(normalized)) {
+            return lookup.get(normalized);
+        }
+
+        return null;
+    }
+
+    /* =========================================================
+       WORD TOKENIZATION
+    ========================================================= */
+
+    function tokenize(text) {
+
+        return text.match(
+            /(?:[\p{L}\p{N}]+(?:[._+#-][\p{L}\p{N}]+)*)|(?:[^\p{L}\p{N}\s]+)|(?:\s+)/gu
+        ) || [];
+    }
+
+    function isWhitespace(value) {
+        return /^\s+$/u.test(value);
+    }
+
+    function isPunctuation(value) {
+        return /^[^\p{L}\p{N}\s]+$/u.test(value);
+    }
+
+    /* =========================================================
+       CAPITALIZED CASE
+    ========================================================= */
+
+    function capitalizedCase(text) {
+
+        return tokenize(text)
+            .map((token) => {
+
+                if (isWhitespace(token)) {
+                    return token;
+                }
+
+                if (isPunctuation(token)) {
+                    return token;
+                }
+
+                const protectedTerm =
+                    protectKnownTerm(token);
+
+                if (protectedTerm) {
+                    return replaceTokenCore(
+                        token,
+                        protectedTerm
+                    );
+                }
+
+                return capitalizeNormalToken(token);
+            })
+            .join("");
+    }
+
+    function capitalizeNormalToken(token) {
+
+        return token.replace(
+            /^([^A-Za-zÀ-ÖØ-öø-ÿ]*)([A-Za-zÀ-ÖØ-öø-ÿ])([\s\S]*)$/u,
+            (match, prefix, first, rest) => {
+
+                return (
+                    prefix +
+                    first.toLocaleUpperCase() +
+                    rest.toLocaleLowerCase()
+                );
+            }
+        );
+    }
+
+    function replaceTokenCore(original, replacement) {
+
+        const match =
+            original.match(
+                /^([^\p{L}\p{N}+#.-]*)([\p{L}\p{N}+#.-]+)([^\p{L}\p{N}+#.-]*)$/u
+            );
+
+        if (!match) {
+            return replacement;
+        }
+
+        return (
+            match[1] +
+            replacement +
+            match[3]
+        );
+    }
+
+    /* =========================================================
+       LOWER CASE
+    ========================================================= */
+
+    function lowerCase(text) {
+
+        if (!settings.smart) {
+            return text.toLocaleLowerCase();
+        }
+
+        const result =
+            text.toLocaleLowerCase();
+
+        const terms = getProtectedTerms();
+
+        const sortedKeys =
+            Object.keys(terms)
+                .sort(
+                    (a, b) =>
+                        b.length - a.length
+                );
+
+        if (!sortedKeys.length) {
+            return result;
+        }
+
+        const escaped =
+            sortedKeys.map(
+                key =>
+                    key.replace(
+                        /[.*+?^${}()|[\]\\]/g,
+                        "\\$&"
+                    )
+            );
+
+        const pattern =
+            escaped.join("|");
+
+        const regex =
+            new RegExp(
+                `(?<![A-Za-z0-9])(${pattern})(?![A-Za-z0-9])`,
+                "giu"
+            );
+
+        return result.replace(
+            regex,
+            (match) => {
+
+                const found =
+                    sortedKeys.find(
+                        key =>
+                            key.toLocaleLowerCase() ===
+                            match.toLocaleLowerCase()
+                    );
+
+                return found
+                    ? terms[found]
+                    : match;
+            }
+        );
+    }
+
+    /* =========================================================
+       SENTENCE CASE
+    ========================================================= */
+
+    function sentenceCase(text) {
+
+        let source =
+            lowerCase(text);
+
+        let capitalizeNext = true;
+
+        return [...source]
+            .map((character) => {
+
+                if (
+                    capitalizeNext &&
+                    /\p{L}/u.test(character)
+                ) {
+                    capitalizeNext = false;
+
+                    return character.toLocaleUpperCase();
+                }
+
+                if (
+                    character === "." ||
+                    character === "!" ||
+                    character === "?"
+                ) {
+                    capitalizeNext = true;
+                }
+
+                return character;
+
+            })
+            .join("");
+    }
+
+    /* =========================================================
+       UPPER CASE
+    ========================================================= */
+
+    function upperCase(text) {
+        return text.toLocaleUpperCase();
+    }
+
+    /* =========================================================
+       ALTERNATING CASE
+    ========================================================= */
+
+    function alternatingCase(text) {
+
+        let upper = false;
+
+        return [...text]
+            .map((character) => {
+
+                if (!/\p{L}/u.test(character)) {
+                    return character;
+                }
+
+                upper = !upper;
+
+                return upper
+                    ? character.toLocaleUpperCase()
+                    : character.toLocaleLowerCase();
+
+            })
+            .join("");
+    }
+
+    /* =========================================================
+       INVERSE CASE
+    ========================================================= */
+
+    function inverseCase(text) {
+
+        return [...text]
+            .map((character) => {
+
+                const lower =
+                    character.toLocaleLowerCase();
+
+                const upper =
+                    character.toLocaleUpperCase();
+
+                if (lower === upper) {
+                    return character;
+                }
+
+                return character === upper
+                    ? lower
+                    : upper;
+
+            })
+            .join("");
+    }
+
+    /* =========================================================
+       TITLE CASE
+    ========================================================= */
+
+    function titleCase(text) {
+
+        const smallWords =
+            new Set([
+                "a",
+                "an",
+                "the",
+                "and",
+                "or",
+                "but",
+                "for",
+                "nor",
+                "on",
+                "at",
+                "to",
+                "by",
+                "of",
+                "in",
+                "via",
+                "as"
+            ]);
+
+        let wordIndex = 0;
+
+        const allWordMatches =
+            text.match(
+                /[\p{L}\p{N}]+(?:[-'’][\p{L}\p{N}]+)*/gu
+            ) || [];
+
+        const totalWords =
+            allWordMatches.length;
+
+        return text.replace(
+            /[\p{L}\p{N}]+(?:[-'’][\p{L}\p{N}]+)*/gu,
+            (word) => {
+
+                const protectedTerm =
+                    protectKnownTerm(word);
+
+                const currentIndex =
+                    wordIndex++;
+
+                if (protectedTerm) {
+                    return protectedTerm;
+                }
+
+                const lower =
+                    word.toLocaleLowerCase();
+
+                if (
+                    currentIndex !== 0 &&
+                    currentIndex !== totalWords - 1 &&
+                    smallWords.has(lower)
+                ) {
+                    return lower;
+                }
+
+                return lower.replace(
+                    /(^|[-'’])(\p{L})/gu,
+                    (
+                        match,
+                        separator,
+                        letter
+                    ) =>
+                        separator +
+                        letter.toLocaleUpperCase()
+                );
+            }
+        );
+    }
+
+    /* =========================================================
+       CONVERSION DISPATCHER
+    ========================================================= */
+
+    function convertText(type, text) {
+
+        switch (type) {
+
+            case "sentence":
+                return sentenceCase(text);
+
+            case "lower":
+                return lowerCase(text);
+
+            case "upper":
+                return upperCase(text);
+
+            case "capitalized":
+                return capitalizedCase(text);
+
+            case "alternating":
+                return alternatingCase(text);
+
+            case "title":
+                return titleCase(text);
+
+            case "inverse":
+                return inverseCase(text);
+
+            default:
+                return text;
+        }
+    }
+
+    /* =========================================================
+       UNDO / REDO
+    ========================================================= */
+
+    function saveUndoState() {
+
+        if (
+            lastEditorValue !==
+            editor.value
+        ) {
+            undoStack.push(lastEditorValue);
+        }
+
+        if (undoStack.length > 50) {
+            undoStack.shift();
+        }
+
+        redoStack.length = 0;
+    }
+
+    function undo() {
+
+        if (!undoStack.length) {
+            showToast("Nothing to undo.");
+            return;
+        }
+
+        redoStack.push(editor.value);
+
+        editor.value =
+            undoStack.pop();
+
+        lastEditorValue =
+            editor.value;
+
+        updateStatistics();
+
+        showToast("Undo");
+    }
+
+    function redo() {
+
+        if (!redoStack.length) {
+            showToast("Nothing to redo.");
+            return;
+        }
+
+        undoStack.push(editor.value);
+
+        editor.value =
+            redoStack.pop();
+
+        lastEditorValue =
+            editor.value;
+
+        updateStatistics();
+
+        showToast("Redo");
+    }
+
+    /* =========================================================
+       APPLY CONVERSION
+    ========================================================= */
+
+    function applyConversion(type) {
+
+        if (!editor.value) {
+            showToast("Enter some text first.");
+            return;
+        }
+
+        saveUndoState();
+
+        editor.value =
+            convertText(
+                type,
+                editor.value
+            );
+
+        lastEditorValue =
+            editor.value;
+
+        lastCase = type;
+
+        saveSettings();
+
+        caseButtons.forEach(
+            button => {
+                button.classList.toggle(
+                    "active",
+                    button.dataset.case === type
+                );
+            }
+        );
+
+        updateStatistics();
+
+        editor.focus();
+    }
+
+    /* =========================================================
+       STATISTICS
+    ========================================================= */
+
+    function updateStatistics() {
+
+        const text =
+            editor.value;
+
+        characters.textContent =
+            text.length.toLocaleString();
+
+        charactersNoSpaces.textContent =
+            text
+                .replace(/\s/g, "")
+                .length
+                .toLocaleString();
+
+        words.textContent =
+            (
+                text.match(
+                    /\b[\p{L}\p{N}][\p{L}\p{N}'’_-]*\b/gu
+                ) || []
+            ).length.toLocaleString();
+
+        sentences.textContent =
+            (
+                text.match(
+                    /[.!?]+(?=\s|$)/gu
+                ) || []
+            ).length.toLocaleString();
+
+        lines.textContent =
+            text
+                ? text
+                    .split(/\r?\n/)
+                    .length
+                    .toLocaleString()
+                : "0";
+    }
+
+    /* =========================================================
+       CLIPBOARD
+    ========================================================= */
+
+    async function copyText() {
+
+        if (!editor.value) {
+            showToast("Nothing to copy.");
+            return;
+        }
+
+        try {
+
+            await navigator.clipboard.writeText(
+                editor.value
+            );
+
+            showToast(
+                "Text copied to clipboard."
+            );
+
+        } catch {
+
+            editor.select();
+
+            const success =
+                document.execCommand("copy");
+
+            showToast(
+                success
+                    ? "Text copied to clipboard."
+                    : "Copy failed. Please copy manually."
+            );
+        }
+    }
+
+    async function pasteText() {
+
+        try {
+
+            const text =
+                await navigator.clipboard.readText();
+
+            if (!text) {
+                showToast("Clipboard is empty.");
+                return;
+            }
+
+            saveUndoState();
+
+            editor.value = text;
+
+            lastEditorValue =
+                editor.value;
+
+            updateStatistics();
+
+            editor.focus();
+
+            showToast("Text pasted.");
+
+        } catch {
+
+            showToast(
+                "Clipboard access was denied."
+            );
+        }
+    }
+
+    /* =========================================================
+       DOWNLOAD
+    ========================================================= */
+
+    function downloadText() {
+
+        if (!editor.value) {
+            showToast("Nothing to download.");
+            return;
+        }
+
+        const blob =
+            new Blob(
+                [editor.value],
+                {
+                    type:
+                        "text/plain;charset=utf-8"
+                }
+            );
+
+        const url =
+            URL.createObjectURL(blob);
+
+        const link =
+            document.createElement("a");
+
+        link.href = url;
+        link.download =
+            "converted-text.txt";
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        link.remove();
+
+        setTimeout(
+            () => URL.revokeObjectURL(url),
+            1000
+        );
+
+        showToast("Text downloaded.");
+    }
+
+    /* =========================================================
+       CLEAR
+    ========================================================= */
+
+    function clearText() {
+
+        if (!editor.value) {
+            return;
+        }
+
+        saveUndoState();
+
+        editor.value = "";
+
+        lastEditorValue = "";
+
+        updateStatistics();
+
+        editor.focus();
+
+        showToast("Text cleared.");
+    }
+
+    /* =========================================================
+       THEME
+    ========================================================= */
+
+    function applyTheme() {
+
+        const dark =
+            settings.theme === "dark" ||
+            (
+                settings.theme === "system" &&
+                window.matchMedia(
+                    "(prefers-color-scheme: dark)"
+                ).matches
+            );
+
+        document.documentElement
+            .classList
+            .toggle("dark", dark);
+
+        const select =
+            document.getElementById(
+                "themeSelect"
+            );
+
+        if (select) {
+            select.value =
+                settings.theme;
+        }
+    }
+
+    /* =========================================================
+       SETTINGS MODAL
+    ========================================================= */
+
+    const settingsOverlay =
+        document.getElementById(
+            "settingsOverlay"
+        );
+
+    const settingsOpeners = [
+        document.getElementById("settingsButton"),
+        document.getElementById("desktopSettings"),
+        document.getElementById("mobileSettings")
+    ];
+
+    const closeSettingsButton =
+        document.getElementById(
+            "closeSettings"
+        );
+
+    function openSettings() {
+
+        document.getElementById(
+            "smartCapitalization"
+        ).checked =
+            settings.smart;
+
+        document.getElementById(
+            "properNames"
+        ).checked =
+            settings.proper;
+
+        document.getElementById(
+            "themeSelect"
+        ).value =
+            settings.theme;
+
+        renderCustomTerms();
+
+        settingsOverlay.classList.add(
+            "open"
+        );
+
+        settingsOverlay.setAttribute(
+            "aria-hidden",
+            "false"
+        );
+    }
+
+    function closeSettings() {
+
+        settingsOverlay.classList.remove(
+            "open"
+        );
+
+        settingsOverlay.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+    }
+
+    settingsOpeners.forEach(
+        button => {
+            button?.addEventListener(
+                "click",
+                openSettings
+            );
+        }
+    );
+
+    closeSettingsButton.addEventListener(
+        "click",
+        closeSettings
+    );
+
+    settingsOverlay.addEventListener(
+        "click",
+        event => {
+            if (
+                event.target ===
+                settingsOverlay
+            ) {
+                closeSettings();
+            }
+        }
+    );
+
+    /* =========================================================
+       SETTINGS OPTIONS
+    ========================================================= */
+
+    document
+        .getElementById("themeSelect")
+        .addEventListener(
+            "change",
+            event => {
+
+                settings.theme =
+                    event.target.value;
+
+                saveSettings();
+
+                applyTheme();
+            }
+        );
+
+    document
+        .getElementById("smartCapitalization")
+        .addEventListener(
+            "change",
+            event => {
+
+                settings.smart =
+                    event.target.checked;
+
+                saveSettings();
+            }
+        );
+
+    document
+        .getElementById("properNames")
+        .addEventListener(
+            "change",
+            event => {
+
+                settings.proper =
+                    event.target.checked;
+
+                saveSettings();
+            }
+        );
+
+    /* =========================================================
+       CUSTOM TERMS
+    ========================================================= */
+
+    function renderCustomTerms() {
+
+        const list =
+            document.getElementById(
+                "customTermList"
+            );
+
+        list.innerHTML = "";
+
+        const entries =
+            Object.entries(
+                customTerms
+            );
+
+        if (!entries.length) {
+
+            const empty =
+                document.createElement(
+                    "span"
+                );
+
+            empty.style.color =
+                "var(--muted)";
+
+            empty.style.fontSize =
+                "11px";
+
+            empty.textContent =
+                "No custom terms.";
+
+            list.appendChild(empty);
+
+            return;
+        }
+
+        entries.forEach(
+            ([key, value]) => {
+
+                const wrapper =
+                    document.createElement(
+                        "span"
+                    );
+
+                wrapper.className =
+                    "term";
+
+                wrapper.appendChild(
+                    document.createTextNode(
+                        `${key} → ${value}`
+                    )
+                );
+
+                const removeButton =
+                    document.createElement(
+                        "button"
+                    );
+
+                removeButton.type =
+                    "button";
+
+                removeButton.className =
+                    "term-remove";
+
+                removeButton.textContent =
+                    "×";
+
+                removeButton.setAttribute(
+                    "aria-label",
+                    `Remove ${key}`
+                );
+
+                removeButton.addEventListener(
+                    "click",
+                    () => {
+
+                        delete customTerms[key];
+
+                        localStorage.setItem(
+                            "smartCase.customTerms",
+                            JSON.stringify(
+                                customTerms
+                            )
+                        );
+
+                        renderCustomTerms();
+
+                        showToast(
+                            "Custom term removed."
+                        );
+                    }
+                );
+
+                wrapper.appendChild(
+                    removeButton
+                );
+
+                list.appendChild(
+                    wrapper
+                );
+            }
+        );
+    }
+
+    document
+        .getElementById("addCustomTerm")
+        .addEventListener(
+            "click",
+            () => {
+
+                const input =
+                    document.getElementById(
+                        "customTermInput"
+                    );
+
+                const value =
+                    input.value.trim();
+
+                if (!value) {
+                    return;
+                }
+
+                const existingKey =
+                    Object.keys(
+                        customTerms
+                    ).find(
+                        key =>
+                            key.toLocaleLowerCase() ===
+                            value.toLocaleLowerCase()
+                    );
+
+                if (existingKey) {
+                    delete customTerms[
+                        existingKey
+                    ];
+                }
+
+                customTerms[value] =
+                    value;
+
+                localStorage.setItem(
+                    "smartCase.customTerms",
+                    JSON.stringify(
+                        customTerms
+                    )
+                );
+
+                input.value = "";
+
+                renderCustomTerms();
+
+                showToast(
+                    "Custom term added."
+                );
+            }
+        );
+
+    document
+        .getElementById("customTermInput")
+        .addEventListener(
+            "keydown",
+            event => {
+
+                if (event.key === "Enter") {
+                    document
+                        .getElementById(
+                            "addCustomTerm"
+                        )
+                        .click();
+                }
+            }
+        );
+
+    /* =========================================================
+       ACTION EVENTS
+    ========================================================= */
+
+    caseButtons.forEach(
+        button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    applyConversion(
+                        button.dataset.case
+                    );
+                }
+            );
+        }
+    );
+
+    document
+        .getElementById("copyButton")
+        .addEventListener(
+            "click",
+            copyText
+        );
+
+    document
+        .getElementById("pasteButton")
+        .addEventListener(
+            "click",
+            pasteText
+        );
+
+    document
+        .getElementById("undoButton")
+        .addEventListener(
+            "click",
+            undo
+        );
+
+    document
+        .getElementById("redoButton")
+        .addEventListener(
+            "click",
+            redo
+        );
+
+    document
+        .getElementById("downloadButton")
+        .addEventListener(
+            "click",
+            downloadText
+        );
+
+    document
+        .getElementById("clearButton")
+        .addEventListener(
+            "click",
+            clearText
+        );
+
+    /* =========================================================
+       EDITOR
+    ========================================================= */
+
+    editor.addEventListener(
+        "input",
+        () => {
+
+            updateStatistics();
+
+            lastEditorValue =
+                editor.value;
+        }
+    );
+
+    /* =========================================================
+       KEYBOARD SHORTCUTS
+    ========================================================= */
+
+    document.addEventListener(
+        "keydown",
+        event => {
+
+            const modifier =
+                event.ctrlKey ||
+                event.metaKey;
+
+            if (
+                modifier &&
+                event.key.toLowerCase() === "y"
+            ) {
+                event.preventDefault();
+                redo();
+            }
+
+            if (
+                event.key === "Escape" &&
+                settingsOverlay.classList.contains(
+                    "open"
+                )
+            ) {
+                closeSettings();
+            }
+
+            if (
+                modifier &&
+                event.key === "Enter"
+            ) {
+                event.preventDefault();
+                applyConversion(
+                    lastCase
+                );
+            }
+        }
+    );
+
+    /* =========================================================
+       MOBILE MENU
+    ========================================================= */
+
+    const mobileMenuButton =
+        document.getElementById(
+            "mobileMenuButton"
+        );
+
+    const mobileNav =
+        document.getElementById(
+            "mobileNav"
+        );
+
+    mobileMenuButton.addEventListener(
+        "click",
+        () => {
+
+            const open =
+                mobileNav.classList.toggle(
+                    "open"
+                );
+
+            mobileMenuButton.setAttribute(
+                "aria-expanded",
+                String(open)
+            );
+        }
+    );
+
+    /* =========================================================
+       THEME TOGGLE
+    ========================================================= */
+
+    function toggleTheme() {
+
+        settings.theme =
+            document.documentElement.classList.contains(
+                "dark"
+            )
+                ? "light"
+                : "dark";
+
+        saveSettings();
+
+        applyTheme();
+    }
+
+    document
+        .getElementById("desktopTheme")
+        .addEventListener(
+            "click",
+            toggleTheme
+        );
+
+    document
+        .getElementById("mobileTheme")
+        .addEventListener(
+            "click",
+            toggleTheme
+        );
+
+    /* =========================================================
+       SYSTEM THEME CHANGES
+    ========================================================= */
+
+    const mediaQuery =
+        window.matchMedia(
+            "(prefers-color-scheme: dark)"
+        );
+
+    if (mediaQuery.addEventListener) {
+
+        mediaQuery.addEventListener(
+            "change",
+            () => {
+
+                if (
+                    settings.theme ===
+                    "system"
+                ) {
+                    applyTheme();
+                }
+            }
+        );
+    }
+
+    /* =========================================================
+       INITIALIZATION
+    ========================================================= */
+
+    lastEditorValue =
+        editor.value;
+
+    caseButtons.forEach(
+        button => {
+
+            button.classList.toggle(
+                "active",
+                button.dataset.case ===
+                lastCase
+            );
+        }
+    );
+
+    applyTheme();
+    updateStatistics();
+
+})();
+</script>
+
+</body>
+</html>
